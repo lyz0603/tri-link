@@ -4,12 +4,22 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -49,6 +59,8 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+private enum class Screen { Main, Rules, Settings }
+
 @Composable
 fun TriLinkApp(
     settingsRepo: SettingsRepository,
@@ -67,61 +79,76 @@ fun TriLinkApp(
     ),
 ) {
     val phase by viewModel.phase.collectAsState()
-    var showRules by remember { mutableStateOf(false) }
-    var showSettings by remember { mutableStateOf(false) }
+    var screen by remember { mutableStateOf(Screen.Main) }
 
-    if (showRules) {
-        RulesScreen(onBack = { showRules = false })
-        return
+    // 系统返回键 / 手势返回（Android 14+ 预见式返回动画由 manifest enableOnBackInvokedCallback 开启）
+    androidx.activity.compose.BackHandler(enabled = screen != Screen.Main) {
+        screen = Screen.Main
     }
 
-    if (showSettings) {
-        val currentSettings by settingsRepo.settings.collectAsState()
-        SettingsScreen(
-            settings = currentSettings,
-            onUpdateAiTimeLimit = settingsRepo::updateAiTimeLimit,
-            onUpdateAiThreads = settingsRepo::updateAiThreads,
-            onUpdateXColor = settingsRepo::updateXColor,
-            onUpdateOColor = settingsRepo::updateOColor,
-            onUpdateThemeMode = settingsRepo::updateThemeMode,
-            onUpdateDynamicColor = settingsRepo::updateDynamicColor,
-            onUpdateLanguage = settingsRepo::updateLanguage,
-            onBack = { showSettings = false },
-        )
-        return
-    }
-
-    when (val current = phase) {
-        is GamePhase.Setup -> {
-            SetupScreen(
-                onStartGame = { piece, isFirst -> viewModel.startGame(piece, isFirst) },
-                onShowRules = { showRules = true },
-                onShowSettings = { showSettings = true },
-            )
-        }
-        is GamePhase.Playing -> {
-            GameScreen(
-                board = current.board,
-                playerPiece = current.playerPiece,
-                aiPiece = current.aiPiece,
-                isPlayerFirst = current.isPlayerFirst,
-                aiThinking = current.aiThinking,
-                message = current.message,
-                onPlayerMove = { row, col -> viewModel.playerMove(row, col) },
-                onNewGame = { viewModel.backToSetup() },
-            )
-        }
-        is GamePhase.GameOver -> {
-            GameScreen(
-                board = current.board,
-                playerPiece = current.playerPiece,
-                aiPiece = current.aiPiece,
-                isPlayerFirst = current.isPlayerFirst,
-                aiThinking = false,
-                message = current.resultText,
-                onPlayerMove = { _, _ -> },
-                onNewGame = { viewModel.backToSetup() },
-            )
+    AnimatedContent(
+        targetState = screen,
+        modifier = Modifier.fillMaxSize(),
+        transitionSpec = {
+            val isForward = targetState != Screen.Main
+            val duration = 320
+            if (isForward) {
+                // 进入 Rules/Settings：从右滑入
+                (slideInHorizontally(tween(duration)) { it } + fadeIn(tween(duration / 2)))
+                    .togetherWith(slideOutHorizontally(tween(duration)) { -it / 3 } + fadeOut(tween(duration / 3)))
+            } else {
+                // 返回 Main：从左滑入
+                (slideInHorizontally(tween(duration)) { -it / 3 } + fadeIn(tween(duration / 2)))
+                    .togetherWith(slideOutHorizontally(tween(duration)) { it } + fadeOut(tween(duration / 3)))
+            }
+        },
+        label = "screen",
+    ) { currentScreen ->
+        when (currentScreen) {
+            Screen.Rules -> {
+                RulesScreen(onBack = { screen = Screen.Main })
+            }
+            Screen.Settings -> {
+                val currentSettings by settingsRepo.settings.collectAsState()
+                SettingsScreen(
+                    settings = currentSettings,
+                    onUpdateAiTimeLimit = settingsRepo::updateAiTimeLimit,
+                    onUpdateAiThreads = settingsRepo::updateAiThreads,
+                    onUpdateXColor = settingsRepo::updateXColor,
+                    onUpdateOColor = settingsRepo::updateOColor,
+                    onUpdateThemeMode = settingsRepo::updateThemeMode,
+                    onUpdateDynamicColor = settingsRepo::updateDynamicColor,
+                    onUpdateLanguage = settingsRepo::updateLanguage,
+                    onBack = { screen = Screen.Main },
+                )
+            }
+            Screen.Main -> when (val current = phase) {
+                is GamePhase.Setup -> SetupScreen(
+                    onStartGame = { piece, isFirst -> viewModel.startGame(piece, isFirst) },
+                    onShowRules = { screen = Screen.Rules },
+                    onShowSettings = { screen = Screen.Settings },
+                )
+                is GamePhase.Playing -> GameScreen(
+                    board = current.board,
+                    playerPiece = current.playerPiece,
+                    aiPiece = current.aiPiece,
+                    isPlayerFirst = current.isPlayerFirst,
+                    aiThinking = current.aiThinking,
+                    message = current.message,
+                    onPlayerMove = { row, col -> viewModel.playerMove(row, col) },
+                    onNewGame = { viewModel.backToSetup() },
+                )
+                is GamePhase.GameOver -> GameScreen(
+                    board = current.board,
+                    playerPiece = current.playerPiece,
+                    aiPiece = current.aiPiece,
+                    isPlayerFirst = current.isPlayerFirst,
+                    aiThinking = false,
+                    message = current.resultText,
+                    onPlayerMove = { _, _ -> },
+                    onNewGame = { viewModel.backToSetup() },
+                )
+            }
         }
     }
 }
