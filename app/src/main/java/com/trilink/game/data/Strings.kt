@@ -38,6 +38,8 @@ interface Strings {
     val rulesEvalBody: String
     val rulesTime: String
     val rulesTimeBody: String
+    val rulesWeight: String
+    val rulesWeightBody: String
     val rulesTechTitle: String
     val rulesTechBody: String
 
@@ -97,6 +99,9 @@ interface Strings {
     val customThemeSeed: String
     val customThemeSeedDesc: String
     val customColorHint: String
+    val aiAlgorithm: String
+    val aiAlphaBeta: String
+    val aiWeight: String
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -154,6 +159,11 @@ object ZhStrings : Strings {
     override val rulesTimeBody =
         "单步搜索时限可调（默认 3 秒）。每次递归入口和循环内部均检查截止时间，" +
         "超时立即返回，确保 UI 不卡顿。"
+    override val rulesWeight = "方向权重法 (Weight Method)"
+    override val rulesWeightBody =
+        "对每个空格在 4 个方向上分析遮挡情况，初始权重 12 分。\n" +
+        "两端均被堵 −3，一端被堵 −2，远距离阻挡 −1。\n" +
+        "选最高分落子，计算极快，适合快速对局。"
     override val rulesTechTitle = "技术栈"
     override val rulesTechBody =
         "• Kotlin + Jetpack Compose (Material Design 3)\n" +
@@ -219,6 +229,9 @@ object ZhStrings : Strings {
     override val customThemeSeed = "主题种子色"
     override val customThemeSeedDesc = "关闭动态配色后可自定义，输入 hex 色值 (#RRGGBB)，留空恢复默认"
     override val customColorHint = "输入 hex"
+    override val aiAlgorithm = "AI 算法"
+    override val aiAlphaBeta = "Alpha-Beta 搜索"
+    override val aiWeight = "方向权重法"
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -276,6 +289,11 @@ object EnStrings : Strings {
     override val rulesTimeBody =
         "Per-move time limit is adjustable (default 3 seconds). Deadline checks are performed " +
         "at every recursion entry and loop iteration; returns immediately on timeout."
+    override val rulesWeight = "Weight Method"
+    override val rulesWeightBody =
+        "Analyzes blocking patterns in 4 directions for each empty cell.\n" +
+        "Initial weight 12, both ends blocked −3, one end −2, distant block −1.\n" +
+        "Picks the highest score. Extremely fast, ideal for quick games."
     override val rulesTechTitle = "Tech Stack"
     override val rulesTechBody =
         "• Kotlin + Jetpack Compose (Material Design 3)\n" +
@@ -341,6 +359,9 @@ object EnStrings : Strings {
     override val customThemeSeed = "Theme Seed Color"
     override val customThemeSeedDesc = "Custom hex (#RRGGBB) when dynamic color is off. Leave empty for default."
     override val customColorHint = "Enter hex"
+    override val aiAlgorithm = "AI Algorithm"
+    override val aiAlphaBeta = "Alpha-Beta Search"
+    override val aiWeight = "Weight Method"
 }
 
 /** 根据语言获取字符串 */

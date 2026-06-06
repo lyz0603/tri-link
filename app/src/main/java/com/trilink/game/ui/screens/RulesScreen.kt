@@ -82,6 +82,7 @@ fun RulesScreen(
             AlgorithmCard(s.rulesParallel, s.rulesParallelBody)
             AlgorithmCard(s.rulesEval, s.rulesEvalBody)
             AlgorithmCard(s.rulesTime, s.rulesTimeBody)
+            AlgorithmCard(s.rulesWeight, s.rulesWeightBody)
             Spacer(modifier = Modifier.height(20.dp))
 
             SectionTitle(s.rulesTechTitle)

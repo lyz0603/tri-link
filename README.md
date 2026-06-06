@@ -18,7 +18,7 @@
 | 语言 | Kotlin |
 | UI | Jetpack Compose (Material Design 3) |
 | 架构 | MVVM (ViewModel + StateFlow) |
-| AI | 迭代加深 Alpha-Beta 剪枝 + 根节点协程并行 |
+| AI | 迭代加深 Alpha-Beta 剪枝 / 方向枚举权重法，协程并行 |
 | 配色 | Android 12+ Dynamic Color 动态配色 |
 | 最低 SDK | Android 8.0 (API 26) |
 
@@ -41,7 +41,8 @@ app/src/main/java/com/trilink/game/
 ├── engine/
 │   ├── Board.kt          # 棋盘常量、32 条线段定义
 │   ├── GameEngine.kt     # 三连计数、启发评估、终局判断
-│   └── AISearch.kt       # Alpha-Beta 迭代加深搜索（协程并行）
+│   ├── AISearch.kt       # Alpha-Beta 迭代加深搜索（协程并行）
+│   └── AISearchSimple.kt  # 方向枚举权重法（轻量快速）
 ├── viewmodel/
 │   └── GameViewModel.kt  # MVVM 状态管理
 ├── ui/

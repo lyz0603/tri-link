@@ -3,8 +3,10 @@ package com.trilink.game.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.trilink.game.data.AIMode
 import com.trilink.game.data.Strings
 import com.trilink.game.data.ZhStrings
+import com.trilink.game.engine.findBestMoveWeight
 import com.trilink.game.engine.iterativeDeepening
 import com.trilink.game.engine.isGameOver
 import com.trilink.game.engine.newBoard
@@ -59,6 +61,7 @@ sealed class GamePhase {
 class GameViewModel(
     private val aiTimeLimitMs: Int = 3000,
     private val aiThreads: Int = 0,
+    private val aiMode: AIMode = AIMode.ALPHA_BETA,
     private val s: Strings = ZhStrings,
 ) : ViewModel() {
 
@@ -162,13 +165,13 @@ class GameViewModel(
         isPlayerFirst: Boolean,
     ) {
         viewModelScope.launch(Dispatchers.Default) {
-            val (bestPos, _) = iterativeDeepening(
-                board = board,
-                ai = aiPiece,
-                player = playerPiece,
-                timeLimitMs = aiTimeLimitMs,
-                numThreads = aiThreads,
-            )
+            val bestPos = when (aiMode) {
+                AIMode.WEIGHT -> findBestMoveWeight(board, aiPiece)
+                AIMode.ALPHA_BETA -> iterativeDeepening(
+                    board = board, ai = aiPiece, player = playerPiece,
+                    timeLimitMs = aiTimeLimitMs, numThreads = aiThreads,
+                ).first
+            }
 
             if (bestPos < 0 || bestPos >= BOARD_SIZE) {
                 // AI 无走法

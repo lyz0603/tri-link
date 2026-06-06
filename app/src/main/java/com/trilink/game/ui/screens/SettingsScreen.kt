@@ -55,6 +55,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.trilink.game.data.AIMode
 import com.trilink.game.data.GameSettings
 import com.trilink.game.data.Language
 import com.trilink.game.data.O_COLOR_PRESETS
@@ -76,6 +77,7 @@ fun SettingsScreen(
     onUpdateThemeMode: (ThemeMode) -> Unit,
     onUpdateDynamicColor: (Boolean) -> Unit,
     onUpdateCustomThemeSeed: (String) -> Unit,
+    onUpdateAiMode: (AIMode) -> Unit,
     onUpdateLanguage: (Language) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -175,6 +177,21 @@ fun SettingsScreen(
                             Spacer(Modifier.width(8.dp))
                             Text("($maxCores ${s.threadsCores})", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                // 算法选择
+                Text(s.aiAlgorithm, style = MaterialTheme.typography.titleSmall)
+                Spacer(Modifier.height(6.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    AIMode.entries.forEach { mode ->
+                        FilterChip(
+                            selected = settings.aiMode == mode,
+                            onClick = { onUpdateAiMode(mode) },
+                            label = { Text(when (mode) { AIMode.ALPHA_BETA -> s.aiAlphaBeta; AIMode.WEIGHT -> s.aiWeight }) },
+                        )
                     }
                 }
             }

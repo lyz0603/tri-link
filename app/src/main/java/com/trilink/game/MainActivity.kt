@@ -77,6 +77,7 @@ fun TriLinkApp(
                 GameViewModel(
                     aiTimeLimitMs = settings.aiTimeLimitMs,
                     aiThreads = settings.aiThreads,
+                    aiMode = settings.aiMode,
                     s = getStrings(settings.language),
                 )
             }
@@ -123,6 +124,7 @@ fun TriLinkApp(
                     onUpdateThemeMode = settingsRepo::updateThemeMode,
                     onUpdateDynamicColor = settingsRepo::updateDynamicColor,
                     onUpdateCustomThemeSeed = settingsRepo::updateCustomThemeSeed,
+                    onUpdateAiMode = settingsRepo::updateAiMode,
                     onUpdateLanguage = settingsRepo::updateLanguage,
                     onBack = { screen = Screen.Main },
                 )

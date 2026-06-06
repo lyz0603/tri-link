@@ -23,6 +23,7 @@ class SettingsRepository(context: Context) {
             themeMode = ThemeMode.valueOf(prefs.getString("theme_mode", "SYSTEM") ?: "SYSTEM"),
             dynamicColor = prefs.getBoolean("dynamic_color", true),
             customThemeSeedHex = prefs.getString("custom_theme_seed", "") ?: "",
+            aiMode = AIMode.valueOf(prefs.getString("ai_mode", "ALPHA_BETA") ?: "ALPHA_BETA"),
             language = Language.valueOf(prefs.getString("language", "ZH") ?: "ZH"),
         )
     }
@@ -36,6 +37,7 @@ class SettingsRepository(context: Context) {
     fun updateThemeMode(mode: ThemeMode) { saveStr("theme_mode", mode.name) { copy(themeMode = mode) } }
     fun updateDynamicColor(enabled: Boolean) { save("dynamic_color", enabled) { copy(dynamicColor = enabled) } }
     fun updateCustomThemeSeed(hex: String) { saveStr("custom_theme_seed", hex) { copy(customThemeSeedHex = hex) } }
+    fun updateAiMode(mode: AIMode) { saveStr("ai_mode", mode.name) { copy(aiMode = mode) } }
     fun updateLanguage(lang: Language) { saveStr("language", lang.name) { copy(language = lang) } }
 
     private inline fun save(key: String, value: Int, crossinline update: GameSettings.() -> GameSettings) {

@@ -31,6 +31,9 @@ val O_COLOR_PRESETS = listOf(
     PieceColorPreset("粉", Color(0xFFDB2777), Color(0xFFFCE7F3), Color(0xFFFDA4AF), Color(0xFF3B1A2A)),
 )
 
+/** AI 算法 */
+enum class AIMode { ALPHA_BETA, WEIGHT }
+
 /** 搜索时限预设（秒） */
 val TIME_LIMIT_PRESETS = listOf(1, 3, 5, 10, 15, 30)
 
@@ -48,5 +51,6 @@ data class GameSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val dynamicColor: Boolean = true,
     val customThemeSeedHex: String = "",
+    val aiMode: AIMode = AIMode.ALPHA_BETA,
     val language: Language = Language.ZH,
 )
