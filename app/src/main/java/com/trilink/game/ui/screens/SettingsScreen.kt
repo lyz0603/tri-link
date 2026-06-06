@@ -39,7 +39,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -59,8 +58,6 @@ import androidx.compose.ui.unit.sp
 import com.trilink.game.data.GameSettings
 import com.trilink.game.data.Language
 import com.trilink.game.data.O_COLOR_PRESETS
-import com.trilink.game.data.THREAD_PRESETS
-import com.trilink.game.data.TIME_LIMIT_PRESETS
 import com.trilink.game.data.ThemeMode
 import com.trilink.game.data.X_COLOR_PRESETS
 import com.trilink.game.ui.theme.LocalStrings
@@ -107,16 +104,78 @@ fun SettingsScreen(
             SectionHeader(s.aiSearch)
             ElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    val ti = TIME_LIMIT_PRESETS.indexOf(settings.aiTimeLimitMs / 1000).coerceAtLeast(0)
+                    // 搜索时限 — 输入框
                     Text(s.searchTime, style = MaterialTheme.typography.titleSmall)
-                    Text("${settings.aiTimeLimitMs / 1000} ${s.seconds}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
-                    Spacer(Modifier.height(4.dp))
-                    Slider(value = ti.toFloat(), onValueChange = { onUpdateAiTimeLimit(TIME_LIMIT_PRESETS[it.toInt()] * 1000) }, valueRange = 0f..(TIME_LIMIT_PRESETS.size - 1).toFloat(), steps = TIME_LIMIT_PRESETS.size - 2)
+                    Spacer(Modifier.height(6.dp))
+                    var timeText by remember(settings.aiTimeLimitMs) {
+                        mutableStateOf((settings.aiTimeLimitMs / 1000).toString())
+                    }
+                    var timeError by remember { mutableStateOf(false) }
+                    val focus = LocalFocusManager.current
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(
+                            value = timeText,
+                            onValueChange = { v ->
+                                if (v.all { it.isDigit() } && v.length <= 4) {
+                                    timeText = v
+                                    val n = v.toIntOrNull()
+                                    timeError = n == null || n < 1
+                                    if (n != null && n >= 1) onUpdateAiTimeLimit(n * 1000)
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            shape = RoundedCornerShape(8.dp),
+                            isError = timeError,
+                            supportingText = if (timeError) {{ Text("1~9999", color = MaterialTheme.colorScheme.error) }} else null,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = { focus.clearFocus() }),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(s.seconds, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+
                     Spacer(Modifier.height(16.dp))
+
+                    // 线程数 — 自动开关 + 手动输入
                     Text(s.threads, style = MaterialTheme.typography.titleSmall)
-                    Text(if (settings.aiThreads == 0) "${s.threadsAuto} (${Runtime.getRuntime().availableProcessors()} ${s.threadsCores})" else s.threadsN(settings.aiThreads), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
-                    Spacer(Modifier.height(4.dp))
-                    Slider(value = THREAD_PRESETS.indexOf(settings.aiThreads).coerceAtLeast(0).toFloat(), onValueChange = { onUpdateAiThreads(THREAD_PRESETS[it.toInt()]) }, valueRange = 0f..(THREAD_PRESETS.size - 1).toFloat(), steps = THREAD_PRESETS.size - 2)
+                    Spacer(Modifier.height(6.dp))
+                    val isAuto = settings.aiThreads == 0
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(s.threadsAuto, style = MaterialTheme.typography.bodyMedium)
+                        Spacer(Modifier.width(8.dp))
+                        Switch(checked = isAuto, onCheckedChange = { onUpdateAiThreads(if (it) 0 else 1) })
+                    }
+                    if (!isAuto) {
+                        Spacer(Modifier.height(6.dp))
+                        val maxCores = Runtime.getRuntime().availableProcessors()
+                        var threadText by remember(settings.aiThreads) {
+                            mutableStateOf(settings.aiThreads.toString())
+                        }
+                        var threadError by remember { mutableStateOf(false) }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            OutlinedTextField(
+                                value = threadText,
+                                onValueChange = { v ->
+                                    if (v.all { it.isDigit() } && v.length <= 3) {
+                                        threadText = v
+                                        val n = v.toIntOrNull()
+                                        threadError = n == null || n < 1 || n > maxCores
+                                        if (n != null && n in 1..maxCores) onUpdateAiThreads(n)
+                                    }
+                                },
+                                modifier = Modifier.weight(1f),
+                                singleLine = true,
+                                shape = RoundedCornerShape(8.dp),
+                                isError = threadError,
+                                supportingText = if (threadError) {{ Text("1~$maxCores", color = MaterialTheme.colorScheme.error) }} else null,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                                keyboardActions = KeyboardActions(onDone = { focus.clearFocus() }),
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("($maxCores ${s.threadsCores})", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
                 }
             }
 
