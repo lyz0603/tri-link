@@ -190,7 +190,7 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(6.dp))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         X_COLOR_PRESETS.forEachIndexed { idx, preset ->
-                            ColorDot(preset.name, preset.lightColor, settings.xColorIndex == idx) { onUpdateXColor(idx) }
+                            ColorDot(s.xColorNames[idx], preset.lightColor, settings.xColorIndex == idx) { onUpdateXColor(idx) }
                         }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
@@ -198,7 +198,7 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(6.dp))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         O_COLOR_PRESETS.forEachIndexed { idx, preset ->
-                            ColorDot(preset.name, preset.lightColor, settings.oColorIndex == idx) { onUpdateOColor(idx) }
+                            ColorDot(s.oColorNames[idx], preset.lightColor, settings.oColorIndex == idx) { onUpdateOColor(idx) }
                         }
                     }
                 }

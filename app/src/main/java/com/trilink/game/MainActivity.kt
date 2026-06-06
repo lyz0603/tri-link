@@ -54,6 +54,7 @@ fun TriLinkApp(
     settingsRepo: SettingsRepository,
     settings: com.trilink.game.data.GameSettings,
     viewModel: GameViewModel = viewModel(
+        key = settings.language.name,
         factory = viewModelFactory {
             initializer {
                 GameViewModel(

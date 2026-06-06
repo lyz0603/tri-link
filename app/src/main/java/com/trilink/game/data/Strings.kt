@@ -84,6 +84,8 @@ interface Strings {
     val dynamicColorDesc: String
     val xColor: String
     val oColor: String
+    val xColorNames: List<String>
+    val oColorNames: List<String>
     val about: String
     val aboutApp: String
     val aboutVersion: String
@@ -201,6 +203,8 @@ object ZhStrings : Strings {
     override val dynamicColorDesc = "Android 12+ 根据壁纸生成配色"
     override val xColor = "X 棋子颜色"
     override val oColor = "O 棋子颜色"
+    override val xColorNames = listOf("蓝", "绿", "紫", "橙")
+    override val oColorNames = listOf("红", "琥珀", "青", "粉")
     override val about = "关于"
     override val aboutApp = "应用"
     override val aboutVersion = "版本"
@@ -318,6 +322,8 @@ object EnStrings : Strings {
     override val dynamicColorDesc = "Android 12+ wallpaper-based theming"
     override val xColor = "X Piece Color"
     override val oColor = "O Piece Color"
+    override val xColorNames = listOf("Blue", "Green", "Purple", "Orange")
+    override val oColorNames = listOf("Red", "Amber", "Cyan", "Pink")
     override val about = "About"
     override val aboutApp = "App"
     override val aboutVersion = "Version"

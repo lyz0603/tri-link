@@ -141,7 +141,7 @@ class GameViewModel(
             playerPiece = current.playerPiece,
             aiPiece = current.aiPiece,
             isPlayerFirst = current.isPlayerFirst,
-            message = "AI 思考中…",
+            message = s.aiThinking,
             aiThinking = true,
         )
         runAiMove(newBoard, current.aiPiece, current.playerPiece, current.isPlayerFirst)
