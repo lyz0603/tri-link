@@ -143,24 +143,26 @@ fun TrilinkTheme(
         else -> FallbackLightScheme
     }
 
-    // X 棋子颜色：index == -1 用自定义 hex
+    // X/O 棋子颜色：index < 0 用自定义 hex，否则取预设
     val xPieceColor = if (xColorIndex < 0) parseHex(customXColorHex) else null
     val oPieceColor = if (oColorIndex < 0) parseHex(customOColorHex) else null
+    val xPreset = X_COLOR_PRESETS.getOrElse(xColorIndex) { X_COLOR_PRESETS[0] }
+    val oPreset = O_COLOR_PRESETS.getOrElse(oColorIndex) { O_COLOR_PRESETS[0] }
 
     val pieceColors = if (darkTheme) {
         PieceColors(
-            xPiece = xPieceColor ?: X_COLOR_PRESETS.getOrElse(xColorIndex) { X_COLOR_PRESETS[0] }.darkColor,
-            oPiece = oPieceColor ?: O_COLOR_PRESETS.getOrElse(oColorIndex) { O_COLOR_PRESETS[0] }.darkColor,
-            xBackground = (xPieceColor ?: Color.Unspecified).let { if (it != Color.Unspecified) it.copy(alpha = 0.15f) else PieceXDark },
-            oBackground = (oPieceColor ?: Color.Unspecified).let { if (it != Color.Unspecified) it.copy(alpha = 0.15f) else PieceODark },
+            xPiece = xPieceColor ?: xPreset.darkColor,
+            oPiece = oPieceColor ?: oPreset.darkColor,
+            xBackground = xPieceColor?.copy(alpha = 0.15f) ?: xPreset.darkBg,
+            oBackground = oPieceColor?.copy(alpha = 0.15f) ?: oPreset.darkBg,
             dotColor = Color(0xFF6B7280),
         )
     } else {
         PieceColors(
-            xPiece = xPieceColor ?: X_COLOR_PRESETS.getOrElse(xColorIndex) { X_COLOR_PRESETS[0] }.lightColor,
-            oPiece = oPieceColor ?: O_COLOR_PRESETS.getOrElse(oColorIndex) { O_COLOR_PRESETS[0] }.lightColor,
-            xBackground = (xPieceColor ?: Color.Unspecified).let { if (it != Color.Unspecified) it.copy(alpha = 0.12f) else PieceXLight },
-            oBackground = (oPieceColor ?: Color.Unspecified).let { if (it != Color.Unspecified) it.copy(alpha = 0.12f) else PieceOLight },
+            xPiece = xPieceColor ?: xPreset.lightColor,
+            oPiece = oPieceColor ?: oPreset.lightColor,
+            xBackground = xPieceColor?.copy(alpha = 0.12f) ?: xPreset.lightBg,
+            oBackground = oPieceColor?.copy(alpha = 0.12f) ?: oPreset.lightBg,
             dotColor = DotGray,
         )
     }
