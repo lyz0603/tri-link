@@ -2,10 +2,10 @@ package com.trilink.game
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -86,9 +87,12 @@ fun TriLinkApp(
     val phase by viewModel.phase.collectAsState()
     var screen by remember { mutableStateOf(Screen.Main) }
 
-    // 系统返回键 / 手势返回（Android 14+ 预见式返回动画由 manifest enableOnBackInvokedCallback 开启）
-    androidx.activity.compose.BackHandler(enabled = screen != Screen.Main) {
-        screen = Screen.Main
+    // 预见式返回 (Android 14+)
+    if (screen != Screen.Main) {
+        PredictiveBackHandler(
+            enabled = true,
+            onBack = { screen = Screen.Main },
+        )
     }
 
     AnimatedContent(
@@ -100,11 +104,9 @@ fun TriLinkApp(
             val isForward = targetState != Screen.Main
             val duration = 320
             if (isForward) {
-                // 进入 Rules/Settings：从右滑入
                 (slideInHorizontally(tween(duration)) { it } + fadeIn(tween(duration / 2)))
                     .togetherWith(slideOutHorizontally(tween(duration)) { -it / 3 } + fadeOut(tween(duration / 3)))
             } else {
-                // 返回 Main：从左滑入
                 (slideInHorizontally(tween(duration)) { -it / 3 } + fadeIn(tween(duration / 2)))
                     .togetherWith(slideOutHorizontally(tween(duration)) { it } + fadeOut(tween(duration / 3)))
             }
