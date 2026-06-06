@@ -14,3 +14,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+/.vscode
+/.claude
+/.reasonix
+/.kotlin
