@@ -8,17 +8,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,29 +28,17 @@ import com.trilink.game.ui.theme.LocalPieceColors
 @Composable
 fun SetupScreen(
     onStartGame: (playerPiece: Char, isPlayerFirst: Boolean) -> Unit,
+    onShowRules: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier,
         topBar = {
             CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = "三连棋",
-                        style = MaterialTheme.typography.headlineMedium,
-                    )
-                },
+                title = { Text("三连棋", style = MaterialTheme.typography.headlineMedium) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                 ),
-                actions = {
-                    Text(
-                        text = "v1.0",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(end = 16.dp),
-                    )
-                },
             )
         },
     ) { innerPadding ->
@@ -62,49 +46,18 @@ fun SetupScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // ── 规则卡片 ──
-            ElevatedCard(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        text = "游戏规则",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "6×6 棋盘，双方轮流落子直到下满。满盘后统计全局三连总数，多者胜。",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "三连 = 横/竖/对角线 连续3颗同色子\n4连 = 2分 · 5连 = 3分 · 6连 = 4分",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
             Text(
-                text = "选择棋子",
+                text = "选择棋子与先后手",
                 style = MaterialTheme.typography.titleMedium,
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // ── 选择按钮：FilledTonalButton 2×2 网格 ──
+            // ── 选择按钮 2×2 ──
             val pieceColors = LocalPieceColors.current
 
             Row(
@@ -149,31 +102,14 @@ fun SetupScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            // ── AI 说明 ──
-            ElevatedCard(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium,
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        text = "AI · 迭代加深 Alpha-Beta 搜索",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        text = "单步时限 3 秒 · 多线程根节点并行",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                    )
-                }
+            TextButton(onClick = onShowRules) {
+                Text(
+                    text = "规则与算法说明 →",
+                    style = MaterialTheme.typography.labelLarge,
+                )
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
