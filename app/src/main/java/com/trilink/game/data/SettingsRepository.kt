@@ -38,18 +38,18 @@ class SettingsRepository(context: Context) {
     fun updateCustomThemeSeed(hex: String) { saveStr("custom_theme_seed", hex) { copy(customThemeSeedHex = hex) } }
     fun updateLanguage(lang: Language) { saveStr("language", lang.name) { copy(language = lang) } }
 
-    private inline fun save(key: String, value: Int, crossinline copy: GameSettings.() -> GameSettings) {
+    private inline fun save(key: String, value: Int, crossinline update: GameSettings.() -> GameSettings) {
         prefs.edit().putInt(key, value).apply()
-        _settings.value = _settings.value.copy()
+        _settings.value = _settings.value.update()
     }
 
-    private inline fun save(key: String, value: Boolean, crossinline copy: GameSettings.() -> GameSettings) {
+    private inline fun save(key: String, value: Boolean, crossinline update: GameSettings.() -> GameSettings) {
         prefs.edit().putBoolean(key, value).apply()
-        _settings.value = _settings.value.copy()
+        _settings.value = _settings.value.update()
     }
 
-    private inline fun saveStr(key: String, value: String, crossinline copy: GameSettings.() -> GameSettings) {
+    private inline fun saveStr(key: String, value: String, crossinline update: GameSettings.() -> GameSettings) {
         prefs.edit().putString(key, value).apply()
-        _settings.value = _settings.value.copy()
+        _settings.value = _settings.value.update()
     }
 }

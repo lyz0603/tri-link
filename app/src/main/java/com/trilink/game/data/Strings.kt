@@ -94,6 +94,9 @@ interface Strings {
     val aboutTech: String
     val aboutAiDesc: String
     val languageLabel: String
+    val customThemeSeed: String
+    val customThemeSeedDesc: String
+    val customColorHint: String
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -213,6 +216,9 @@ object ZhStrings : Strings {
     override val aboutTech = "技术"
     override val aboutAiDesc = "AI 使用迭代加深 Alpha-Beta 搜索，\n根节点协程并行，单步时限可调。"
     override val languageLabel = "语言"
+    override val customThemeSeed = "主题种子色"
+    override val customThemeSeedDesc = "关闭动态配色后可自定义，输入 hex 色值 (#RRGGBB)，留空恢复默认"
+    override val customColorHint = "输入 hex"
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -332,6 +338,9 @@ object EnStrings : Strings {
     override val aboutTech = "Tech"
     override val aboutAiDesc = "AI uses iterative deepening Alpha-Beta search,\nroot parallelization with coroutines, adjustable time limit."
     override val languageLabel = "Language"
+    override val customThemeSeed = "Theme Seed Color"
+    override val customThemeSeedDesc = "Custom hex (#RRGGBB) when dynamic color is off. Leave empty for default."
+    override val customColorHint = "Enter hex"
 }
 
 /** 根据语言获取字符串 */

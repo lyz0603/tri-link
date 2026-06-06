@@ -1,5 +1,10 @@
 package com.trilink.game.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -143,17 +148,24 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            // ── 主题种子色 ──
-            ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("主题种子色", style = MaterialTheme.typography.titleSmall)
-                    Text("输入 hex 色值 (#RRGGBB) 自定义主题配色，留空恢复默认", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(Modifier.height(8.dp))
-                    HexInput(settings.customThemeSeedHex, onUpdateCustomThemeSeed, "3B5CB8")
+            // ── 主题种子色（仅关闭动态配色后可用）──
+            AnimatedVisibility(
+                visible = !settings.dynamicColor,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+            ) {
+                Column {
+                    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(s.customThemeSeed, style = MaterialTheme.typography.titleSmall)
+                            Text(s.customThemeSeedDesc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Spacer(Modifier.height(8.dp))
+                            HexInput(settings.customThemeSeedHex, onUpdateCustomThemeSeed, "3B5CB8")
+                        }
+                    }
+                    Spacer(Modifier.height(12.dp))
                 }
             }
-
-            Spacer(Modifier.height(12.dp))
 
             // 语言
             ElevatedCard(modifier = Modifier.fillMaxWidth()) {
