@@ -12,9 +12,13 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.trilink.game.data.Language
+import com.trilink.game.data.Strings
 import com.trilink.game.data.ThemeMode
 import com.trilink.game.data.X_COLOR_PRESETS
 import com.trilink.game.data.O_COLOR_PRESETS
+import com.trilink.game.data.ZhStrings
+import com.trilink.game.data.getStrings
 
 // ─── 棋子颜色上下文 ────────────────────────────────────────────────────────────
 
@@ -33,6 +37,8 @@ val LocalPieceColors = staticCompositionLocalOf {
         dotColor = DotGray,
     )
 }
+
+val LocalStrings = staticCompositionLocalOf<Strings> { ZhStrings }
 
 // ─── 回退配色 ──────────────────────────────────────────────────────────────────
 
@@ -92,8 +98,10 @@ fun TrilinkTheme(
     dynamicColor: Boolean = true,
     xColorIndex: Int = 0,
     oColorIndex: Int = 0,
+    language: Language = Language.ZH,
     content: @Composable () -> Unit,
 ) {
+    val strings = getStrings(language)
     val systemDark = isSystemInDarkTheme()
     val darkTheme = when (themeMode) {
         ThemeMode.DARK -> true
@@ -127,7 +135,10 @@ fun TrilinkTheme(
         )
     }
 
-    CompositionLocalProvider(LocalPieceColors provides pieceColors) {
+    CompositionLocalProvider(
+        LocalPieceColors provides pieceColors,
+        LocalStrings provides strings,
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = AppTypography,

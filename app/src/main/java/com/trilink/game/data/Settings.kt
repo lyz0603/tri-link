@@ -45,4 +45,5 @@ data class GameSettings(
     val oColorIndex: Int = 0,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val dynamicColor: Boolean = true,
+    val language: Language = Language.ZH,
 )

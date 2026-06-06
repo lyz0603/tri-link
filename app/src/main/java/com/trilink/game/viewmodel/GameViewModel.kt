@@ -3,6 +3,8 @@ package com.trilink.game.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.trilink.game.data.Strings
+import com.trilink.game.data.ZhStrings
 import com.trilink.game.engine.iterativeDeepening
 import com.trilink.game.engine.isGameOver
 import com.trilink.game.engine.newBoard
@@ -57,6 +59,7 @@ sealed class GamePhase {
 class GameViewModel(
     private val aiTimeLimitMs: Int = 3000,
     private val aiThreads: Int = 0,
+    private val s: Strings = ZhStrings,
 ) : ViewModel() {
 
     private val _phase = MutableStateFlow<GamePhase>(GamePhase.Setup)
@@ -77,7 +80,7 @@ class GameViewModel(
                 playerPiece = playerPiece,
                 aiPiece = aiPiece,
                 isPlayerFirst = true,
-                message = "新游戏！你执 $playerPiece，先手落子。",
+                message = s.newGameStarted(playerPiece),
                 aiThinking = false,
             )
         } else {
@@ -87,7 +90,7 @@ class GameViewModel(
                 playerPiece = playerPiece,
                 aiPiece = aiPiece,
                 isPlayerFirst = false,
-                message = "AI 思考中…",
+                message = s.aiThinking,
                 aiThinking = true,
             )
             runAiMove(board, aiPiece, playerPiece, isPlayerFirst = false)
@@ -104,19 +107,19 @@ class GameViewModel(
 
         // 校验位置有效
         if (row !in 0 until GRID || col !in 0 until GRID) {
-            _phase.value = current.copy(message = "无效位置！")
+            _phase.value = current.copy(message = s.invalidPos)
             return
         }
 
         // 校验空格
         if (current.board[idx] != '.') {
-            _phase.value = current.copy(message = "该位置已有棋子！请重新选择。")
+            _phase.value = current.copy(message = s.cellOccupied)
             return
         }
 
         // 校验回合
         if (!isPlayerTurn(current.board, current.isPlayerFirst)) {
-            _phase.value = current.copy(message = "请等待 AI 落子后再操作。")
+            _phase.value = current.copy(message = s.waitAi)
             return
         }
 
@@ -171,7 +174,7 @@ class GameViewModel(
                 // AI 无走法
                 launch(Dispatchers.Main) {
                     _phase.value = (_phase.value as? GamePhase.Playing)?.copy(
-                        message = "AI 无法落子。",
+                        message = s.aiCantMove,
                         aiThinking = false,
                     ) ?: return@launch
                 }
@@ -192,7 +195,7 @@ class GameViewModel(
                     val current = _phase.value as? GamePhase.Playing ?: return@launch
                     _phase.value = current.copy(
                         board = newBoard,
-                        message = "AI 已落子 ($aiRow,$aiCol)，轮到你了。",
+                        message = s.aiMoved(aiRow, aiCol),
                         aiThinking = false,
                     )
                 }
@@ -209,13 +212,13 @@ class GameViewModel(
     ) {
         val playerThrees = countThrees(board, playerPiece)
         val aiThrees = countThrees(board, aiPiece)
-        val result = when {
-            playerThrees > aiThrees -> "玩家胜"
-            aiThrees > playerThrees -> "AI胜"
-            else -> "平局"
+        val winner: Int = when {
+            playerThrees > aiThrees -> 1
+            aiThrees > playerThrees -> -1
+            else -> 0
         }
-        val resultText = "游戏结束！你: $playerThrees 三连，AI: $aiThrees 三连 → $result"
-        Log.i(TAG, "游戏结束。玩家三连: $playerThrees, AI三连: $aiThrees, $result。")
+        val resultText = s.gameEnded(playerThrees, aiThrees, winner)
+        Log.i(TAG, "游戏结束。玩家三连: $playerThrees, AI三连: $aiThrees, winner=$winner")
         Log.i(TAG, "=== 本局结束 ===")
 
         _phase.value = GamePhase.GameOver(

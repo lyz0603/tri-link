@@ -20,10 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.trilink.game.ui.theme.LocalPieceColors
+import com.trilink.game.ui.theme.LocalStrings
 
-/**
- * 游戏状态栏 — 使用 AssistChip + Surface，Material 3 风格。
- */
 @Composable
 fun StatusBar(
     playerPiece: Char,
@@ -36,6 +34,7 @@ fun StatusBar(
     message: String,
     modifier: Modifier = Modifier,
 ) {
+    val s = LocalStrings.current
     val pieceColors = LocalPieceColors.current
 
     Surface(
@@ -45,37 +44,28 @@ fun StatusBar(
         tonalElevation = 2.dp,
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // 第一行：玩家/AI 标签 + 回合状态
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // 左侧：你 X · AI O
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    PieceChip(label = "你", piece = playerPiece)
-                    Text(
-                        text = "vs",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    PieceChip(label = "AI", piece = aiPiece)
+                    PieceChip(label = s.you, piece = playerPiece)
+                    Text(s.vs, style = MaterialTheme.typography.labelSmall,
+                         color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    PieceChip(label = s.ai, piece = aiPiece)
                 }
 
-                // 右侧：回合状态
                 val statusText = when {
-                    isGameOver -> "游戏结束"
-                    isAiThinking -> "AI 思考中…"
-                    isPlayerTurn -> "轮到你了"
-                    else -> "AI 思考中…"
+                    isGameOver -> s.gameOver
+                    isAiThinking -> s.aiThinking
+                    isPlayerTurn -> s.yourTurn
+                    else -> s.aiThinking
                 }
-                val statusColor = animateStatusColor(
-                    isGameOver = isGameOver,
-                    isPlayerTurn = isPlayerTurn,
-                )
+                val statusColor = animateStatusColor(isGameOver, isPlayerTurn)
 
                 Text(
                     text = statusText,
@@ -85,24 +75,18 @@ fun StatusBar(
                 )
             }
 
-            // 第二行：信息 + 空格数
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = when {
-                        isPlayerFirst -> "先手"
-                        else -> "后手"
-                    },
+                    text = if (isPlayerFirst) s.firstHand else s.secondHand,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = "剩余 $emptyCount 格",
+                    text = "${s.remaining} $emptyCount",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -110,19 +94,16 @@ fun StatusBar(
         }
     }
 
-    // 消息行（错误/提示/结果）
     if (message.isNotEmpty()) {
-        val messageColor = when {
-            message.contains("胜") -> MaterialTheme.colorScheme.primary
-            message.contains("结束") -> MaterialTheme.colorScheme.onSurface
-            message.contains("无效") || message.contains("已有") || message.contains("等待") ->
+        val msgColor = when {
+            message.contains(s.youWin.dropLast(1).take(2)) -> MaterialTheme.colorScheme.primary
+            message.contains(s.gameOver) -> MaterialTheme.colorScheme.onSurface
+            message == s.invalidPos || message == s.cellOccupied || message == s.waitAi ->
                 MaterialTheme.colorScheme.error
             else -> MaterialTheme.colorScheme.onSurface
         }
         Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
             shape = MaterialTheme.shapes.medium,
             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
         ) {
@@ -131,7 +112,7 @@ fun StatusBar(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
-                color = messageColor,
+                color = msgColor,
                 textAlign = TextAlign.Center,
             )
         }
@@ -146,36 +127,21 @@ private fun PieceChip(label: String, piece: Char) {
         'O' -> pieceColors.oPiece to pieceColors.oBackground
         else -> MaterialTheme.colorScheme.onSurface to MaterialTheme.colorScheme.surface
     }
-
     AssistChip(
         onClick = {},
-        label = {
-            Text(
-                text = "$label 执 $piece",
-                style = MaterialTheme.typography.labelLarge,
-                color = chipColor,
-            )
-        },
-        colors = AssistChipDefaults.assistChipColors(
-            containerColor = chipBg,
-        ),
+        label = { Text("$label $piece", style = MaterialTheme.typography.labelLarge, color = chipColor) },
+        colors = AssistChipDefaults.assistChipColors(containerColor = chipBg),
         shape = MaterialTheme.shapes.small,
     )
 }
 
-// ─── 动画辅助 ──────────────────────────────────────────────────────────────────
-
 @Composable
 private fun animateStatusColor(isGameOver: Boolean, isPlayerTurn: Boolean): androidx.compose.ui.graphics.Color {
-    val targetColor = when {
+    val target = when {
         isGameOver -> MaterialTheme.colorScheme.error
         isPlayerTurn -> MaterialTheme.colorScheme.primary
         else -> MaterialTheme.colorScheme.tertiary
     }
-    val animated by animateColorAsState(
-        targetValue = targetColor,
-        animationSpec = tween(400),
-        label = "statusColor",
-    )
+    val animated by animateColorAsState(target, tween(400), label = "statusColor")
     return animated
 }

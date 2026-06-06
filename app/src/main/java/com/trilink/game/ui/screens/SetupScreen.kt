@@ -14,7 +14,6 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -24,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.trilink.game.ui.theme.LocalPieceColors
+import com.trilink.game.ui.theme.LocalStrings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,11 +33,13 @@ fun SetupScreen(
     onShowSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val s = LocalStrings.current
+
     Scaffold(
         modifier = modifier,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("三连棋", style = MaterialTheme.typography.headlineMedium) },
+                title = { Text(s.appTitle, style = MaterialTheme.typography.headlineMedium) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                 ),
@@ -58,13 +60,12 @@ fun SetupScreen(
             verticalArrangement = Arrangement.Center,
         ) {
             Text(
-                text = "选择棋子与先后手",
+                text = s.choosePiece,
                 style = MaterialTheme.typography.titleMedium,
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ── 选择按钮 2×2 ──
             val pieceColors = LocalPieceColors.current
 
             Row(
@@ -72,14 +73,14 @@ fun SetupScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
             ) {
                 PieceChoiceButton(
-                    label = "执 X · 先手",
+                    label = s.xFirst,
                     bgColor = pieceColors.xBackground,
                     fgColor = pieceColors.xPiece,
                     onClick = { onStartGame('X', true) },
                     modifier = Modifier.weight(1f),
                 )
                 PieceChoiceButton(
-                    label = "执 X · 后手",
+                    label = s.xSecond,
                     bgColor = pieceColors.xBackground,
                     fgColor = pieceColors.xPiece,
                     onClick = { onStartGame('X', false) },
@@ -94,14 +95,14 @@ fun SetupScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
             ) {
                 PieceChoiceButton(
-                    label = "执 O · 先手",
+                    label = s.oFirst,
                     bgColor = pieceColors.oBackground,
                     fgColor = pieceColors.oPiece,
                     onClick = { onStartGame('O', true) },
                     modifier = Modifier.weight(1f),
                 )
                 PieceChoiceButton(
-                    label = "执 O · 后手",
+                    label = s.oSecond,
                     bgColor = pieceColors.oBackground,
                     fgColor = pieceColors.oPiece,
                     onClick = { onStartGame('O', false) },
@@ -113,7 +114,7 @@ fun SetupScreen(
 
             TextButton(onClick = onShowRules) {
                 Text(
-                    text = "规则与算法说明 →",
+                    text = s.rulesLink,
                     style = MaterialTheme.typography.labelLarge,
                 )
             }

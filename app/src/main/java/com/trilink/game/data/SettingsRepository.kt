@@ -20,6 +20,7 @@ class SettingsRepository(context: Context) {
             oColorIndex = prefs.getInt("o_color_index", 0),
             themeMode = ThemeMode.valueOf(prefs.getString("theme_mode", "SYSTEM") ?: "SYSTEM"),
             dynamicColor = prefs.getBoolean("dynamic_color", true),
+            language = Language.valueOf(prefs.getString("language", "ZH") ?: "ZH"),
         )
     }
 
@@ -51,5 +52,10 @@ class SettingsRepository(context: Context) {
     fun updateDynamicColor(enabled: Boolean) {
         prefs.edit().putBoolean("dynamic_color", enabled).apply()
         _settings.value = _settings.value.copy(dynamicColor = enabled)
+    }
+
+    fun updateLanguage(lang: Language) {
+        prefs.edit().putString("language", lang.name).apply()
+        _settings.value = _settings.value.copy(language = lang)
     }
 }

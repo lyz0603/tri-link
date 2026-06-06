@@ -14,6 +14,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.trilink.game.data.SettingsRepository
+import com.trilink.game.data.getStrings
 import com.trilink.game.ui.screens.GameScreen
 import com.trilink.game.ui.screens.RulesScreen
 import com.trilink.game.ui.screens.SettingsScreen
@@ -37,11 +38,11 @@ class MainActivity : ComponentActivity() {
                 dynamicColor = settings.dynamicColor,
                 xColorIndex = settings.xColorIndex,
                 oColorIndex = settings.oColorIndex,
+                language = settings.language,
             ) {
                 TriLinkApp(
                     settingsRepo = settingsRepo,
-                    aiTimeLimitMs = settings.aiTimeLimitMs,
-                    aiThreads = settings.aiThreads,
+                    settings = settings,
                 )
             }
         }
@@ -51,12 +52,15 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun TriLinkApp(
     settingsRepo: SettingsRepository,
-    aiTimeLimitMs: Int,
-    aiThreads: Int,
+    settings: com.trilink.game.data.GameSettings,
     viewModel: GameViewModel = viewModel(
         factory = viewModelFactory {
             initializer {
-                GameViewModel(aiTimeLimitMs = aiTimeLimitMs, aiThreads = aiThreads)
+                GameViewModel(
+                    aiTimeLimitMs = settings.aiTimeLimitMs,
+                    aiThreads = settings.aiThreads,
+                    s = getStrings(settings.language),
+                )
             }
         }
     ),
@@ -71,15 +75,16 @@ fun TriLinkApp(
     }
 
     if (showSettings) {
-        val settings by settingsRepo.settings.collectAsState()
+        val currentSettings by settingsRepo.settings.collectAsState()
         SettingsScreen(
-            settings = settings,
+            settings = currentSettings,
             onUpdateAiTimeLimit = settingsRepo::updateAiTimeLimit,
             onUpdateAiThreads = settingsRepo::updateAiThreads,
             onUpdateXColor = settingsRepo::updateXColor,
             onUpdateOColor = settingsRepo::updateOColor,
             onUpdateThemeMode = settingsRepo::updateThemeMode,
             onUpdateDynamicColor = settingsRepo::updateDynamicColor,
+            onUpdateLanguage = settingsRepo::updateLanguage,
             onBack = { showSettings = false },
         )
         return

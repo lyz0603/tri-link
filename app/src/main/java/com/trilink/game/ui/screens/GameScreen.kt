@@ -24,7 +24,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.trilink.game.engine.countEmpty
 import com.trilink.game.engine.countThrees
@@ -32,6 +31,7 @@ import com.trilink.game.engine.isGameOver
 import com.trilink.game.engine.isPlayerTurn
 import com.trilink.game.ui.components.BoardGrid
 import com.trilink.game.ui.components.StatusBar
+import com.trilink.game.ui.theme.LocalStrings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,26 +46,22 @@ fun GameScreen(
     onNewGame: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val s = LocalStrings.current
     val over = isGameOver(board)
     val playerTurn = !over && !aiThinking && isPlayerTurn(board, isPlayerFirst)
     val empty = countEmpty(board)
 
     val title = when {
-        over -> "对局结束"
-        aiThinking -> "AI 思考中…"
-        else -> "三连棋"
+        over -> s.gameOver
+        aiThinking -> s.aiThinking
+        else -> s.appTitle
     }
 
     Scaffold(
         modifier = modifier,
         topBar = {
             CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-                },
+                title = { Text(title, style = MaterialTheme.typography.titleLarge) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                 ),
@@ -82,7 +78,6 @@ fun GameScreen(
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            // ── 状态栏 ──
             StatusBar(
                 playerPiece = playerPiece,
                 aiPiece = aiPiece,
@@ -96,17 +91,16 @@ fun GameScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ── 终局结果卡片（带动画）──
             AnimatedVisibility(
                 visible = over,
                 enter = fadeIn() + scaleIn() + slideInVertically(),
             ) {
                 val playerThrees = countThrees(board, playerPiece)
                 val aiThrees = countThrees(board, aiPiece)
-                val (resultEmoji, resultText) = when {
-                    playerThrees > aiThrees -> Pair("🎉", "你赢了！")
-                    aiThrees > playerThrees -> Pair("🤖", "AI 赢了")
-                    else -> Pair("🤝", "平局")
+                val (emoji, resultText) = when {
+                    playerThrees > aiThrees -> Pair("🎉", s.youWin)
+                    aiThrees > playerThrees -> Pair("🤖", s.aiWins)
+                    else -> Pair("🤝", s.draw)
                 }
 
                 ElevatedCard(
@@ -114,20 +108,18 @@ fun GameScreen(
                     shape = MaterialTheme.shapes.large,
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
+                        modifier = Modifier.fillMaxWidth().padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text(
-                            text = "$resultEmoji $resultText",
+                            text = "$emoji $resultText",
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "你: $playerThrees 三连    AI: $aiThrees 三连",
+                            text = "${s.you}: $playerThrees ${s.threesLabel}    ${s.ai}: $aiThrees ${s.threesLabel}",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -136,7 +128,6 @@ fun GameScreen(
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
-            // ── 棋盘 ──
             BoardGrid(
                 board = board,
                 enabled = playerTurn,
@@ -145,17 +136,12 @@ fun GameScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // ── 新游戏按钮 ──
             ElevatedButton(
                 onClick = onNewGame,
                 modifier = Modifier.height(52.dp),
                 shape = MaterialTheme.shapes.large,
             ) {
-                Text(
-                    text = "新游戏",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
+                Text(s.newGame, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
