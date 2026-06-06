@@ -14,6 +14,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -29,6 +30,7 @@ import com.trilink.game.ui.theme.LocalPieceColors
 fun SetupScreen(
     onStartGame: (playerPiece: Char, isPlayerFirst: Boolean) -> Unit,
     onShowRules: () -> Unit,
+    onShowSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -39,6 +41,11 @@ fun SetupScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                 ),
+                actions = {
+                    TextButton(onClick = onShowSettings) {
+                        Text("⚙", style = MaterialTheme.typography.titleMedium)
+                    }
+                },
             )
         },
     ) { innerPadding ->

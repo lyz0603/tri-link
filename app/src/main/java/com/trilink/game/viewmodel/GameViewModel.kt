@@ -54,7 +54,10 @@ sealed class GamePhase {
 /**
  * 游戏状态容器。
  */
-class GameViewModel : ViewModel() {
+class GameViewModel(
+    private val aiTimeLimitMs: Int = 3000,
+    private val aiThreads: Int = 0,
+) : ViewModel() {
 
     private val _phase = MutableStateFlow<GamePhase>(GamePhase.Setup)
     val phase: StateFlow<GamePhase> = _phase.asStateFlow()
@@ -160,7 +163,8 @@ class GameViewModel : ViewModel() {
                 board = board,
                 ai = aiPiece,
                 player = playerPiece,
-                timeLimitMs = 3000,
+                timeLimitMs = aiTimeLimitMs,
+                numThreads = aiThreads,
             )
 
             if (bestPos < 0 || bestPos >= BOARD_SIZE) {

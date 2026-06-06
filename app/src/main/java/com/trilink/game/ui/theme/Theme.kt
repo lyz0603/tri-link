@@ -12,8 +12,11 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.trilink.game.data.ThemeMode
+import com.trilink.game.data.X_COLOR_PRESETS
+import com.trilink.game.data.O_COLOR_PRESETS
 
-// ─── 棋子颜色上下文（供 BoardGrid 等组件在动态主题下获取正确的颜色）───
+// ─── 棋子颜色上下文 ────────────────────────────────────────────────────────────
 
 data class PieceColors(
     val xPiece: Color,
@@ -23,25 +26,15 @@ data class PieceColors(
     val dotColor: Color,
 )
 
-val LightPieceColors = PieceColors(
-    xPiece = PieceX,
-    oPiece = PieceO,
-    xBackground = PieceXLight,
-    oBackground = PieceOLight,
-    dotColor = DotGray,
-)
+val LocalPieceColors = staticCompositionLocalOf {
+    PieceColors(
+        xPiece = PieceX, oPiece = PieceO,
+        xBackground = PieceXLight, oBackground = PieceOLight,
+        dotColor = DotGray,
+    )
+}
 
-val DarkPieceColors = PieceColors(
-    xPiece = Color(0xFF93C5FD),   // 浅蓝
-    oPiece = Color(0xFFFCA5A5),   // 浅红
-    xBackground = PieceXDark,
-    oBackground = PieceODark,
-    dotColor = Color(0xFF6B7280),
-)
-
-val LocalPieceColors = staticCompositionLocalOf { LightPieceColors }
-
-// ─── 回退配色（Android 12 以下无 dynamic color 时使用）───
+// ─── 回退配色 ──────────────────────────────────────────────────────────────────
 
 private val FallbackLightScheme = lightColorScheme(
     primary = Color(0xFF3B5CB8),
@@ -95,10 +88,19 @@ private val FallbackDarkScheme = darkColorScheme(
 
 @Composable
 fun TrilinkTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    themeMode: ThemeMode = ThemeMode.SYSTEM,
     dynamicColor: Boolean = true,
+    xColorIndex: Int = 0,
+    oColorIndex: Int = 0,
     content: @Composable () -> Unit,
 ) {
+    val systemDark = isSystemInDarkTheme()
+    val darkTheme = when (themeMode) {
+        ThemeMode.DARK -> true
+        ThemeMode.LIGHT -> false
+        ThemeMode.SYSTEM -> systemDark
+    }
+
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
@@ -108,7 +110,22 @@ fun TrilinkTheme(
         else -> FallbackLightScheme
     }
 
-    val pieceColors = if (darkTheme) DarkPieceColors else LightPieceColors
+    val xPreset = X_COLOR_PRESETS.getOrElse(xColorIndex) { X_COLOR_PRESETS[0] }
+    val oPreset = O_COLOR_PRESETS.getOrElse(oColorIndex) { O_COLOR_PRESETS[0] }
+
+    val pieceColors = if (darkTheme) {
+        PieceColors(
+            xPiece = xPreset.darkColor, oPiece = oPreset.darkColor,
+            xBackground = xPreset.darkBg, oBackground = oPreset.darkBg,
+            dotColor = Color(0xFF6B7280),
+        )
+    } else {
+        PieceColors(
+            xPiece = xPreset.lightColor, oPiece = oPreset.lightColor,
+            xBackground = xPreset.lightBg, oBackground = oPreset.lightBg,
+            dotColor = DotGray,
+        )
+    }
 
     CompositionLocalProvider(LocalPieceColors provides pieceColors) {
         MaterialTheme(

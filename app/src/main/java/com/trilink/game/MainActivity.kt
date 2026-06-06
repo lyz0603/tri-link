@@ -11,8 +11,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.trilink.game.data.SettingsRepository
 import com.trilink.game.ui.screens.GameScreen
 import com.trilink.game.ui.screens.RulesScreen
+import com.trilink.game.ui.screens.SettingsScreen
 import com.trilink.game.ui.screens.SetupScreen
 import com.trilink.game.ui.theme.TrilinkTheme
 import com.trilink.game.viewmodel.GamePhase
@@ -22,9 +26,23 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val settingsRepo = SettingsRepository(applicationContext)
+
         setContent {
-            TrilinkTheme {
-                TriLinkApp()
+            val settings by settingsRepo.settings.collectAsState()
+
+            TrilinkTheme(
+                themeMode = settings.themeMode,
+                dynamicColor = settings.dynamicColor,
+                xColorIndex = settings.xColorIndex,
+                oColorIndex = settings.oColorIndex,
+            ) {
+                TriLinkApp(
+                    settingsRepo = settingsRepo,
+                    aiTimeLimitMs = settings.aiTimeLimitMs,
+                    aiThreads = settings.aiThreads,
+                )
             }
         }
     }
@@ -32,13 +50,38 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun TriLinkApp(
-    viewModel: GameViewModel = viewModel(),
+    settingsRepo: SettingsRepository,
+    aiTimeLimitMs: Int,
+    aiThreads: Int,
+    viewModel: GameViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer {
+                GameViewModel(aiTimeLimitMs = aiTimeLimitMs, aiThreads = aiThreads)
+            }
+        }
+    ),
 ) {
-    var showRules by remember { mutableStateOf(false) }
     val phase by viewModel.phase.collectAsState()
+    var showRules by remember { mutableStateOf(false) }
+    var showSettings by remember { mutableStateOf(false) }
 
     if (showRules) {
         RulesScreen(onBack = { showRules = false })
+        return
+    }
+
+    if (showSettings) {
+        val settings by settingsRepo.settings.collectAsState()
+        SettingsScreen(
+            settings = settings,
+            onUpdateAiTimeLimit = settingsRepo::updateAiTimeLimit,
+            onUpdateAiThreads = settingsRepo::updateAiThreads,
+            onUpdateXColor = settingsRepo::updateXColor,
+            onUpdateOColor = settingsRepo::updateOColor,
+            onUpdateThemeMode = settingsRepo::updateThemeMode,
+            onUpdateDynamicColor = settingsRepo::updateDynamicColor,
+            onBack = { showSettings = false },
+        )
         return
     }
 
@@ -47,6 +90,7 @@ fun TriLinkApp(
             SetupScreen(
                 onStartGame = { piece, isFirst -> viewModel.startGame(piece, isFirst) },
                 onShowRules = { showRules = true },
+                onShowSettings = { showSettings = true },
             )
         }
         is GamePhase.Playing -> {
