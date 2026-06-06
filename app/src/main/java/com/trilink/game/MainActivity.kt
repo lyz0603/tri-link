@@ -48,6 +48,9 @@ class MainActivity : ComponentActivity() {
                 dynamicColor = settings.dynamicColor,
                 xColorIndex = settings.xColorIndex,
                 oColorIndex = settings.oColorIndex,
+                customXColorHex = settings.customXColorHex,
+                customOColorHex = settings.customOColorHex,
+                customThemeSeedHex = settings.customThemeSeedHex,
                 language = settings.language,
             ) {
                 TriLinkApp(
@@ -116,8 +119,11 @@ fun TriLinkApp(
                     onUpdateAiThreads = settingsRepo::updateAiThreads,
                     onUpdateXColor = settingsRepo::updateXColor,
                     onUpdateOColor = settingsRepo::updateOColor,
+                    onUpdateCustomXColor = settingsRepo::updateCustomXColor,
+                    onUpdateCustomOColor = settingsRepo::updateCustomOColor,
                     onUpdateThemeMode = settingsRepo::updateThemeMode,
                     onUpdateDynamicColor = settingsRepo::updateDynamicColor,
+                    onUpdateCustomThemeSeed = settingsRepo::updateCustomThemeSeed,
                     onUpdateLanguage = settingsRepo::updateLanguage,
                     onBack = { screen = Screen.Main },
                 )

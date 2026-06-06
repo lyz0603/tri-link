@@ -2,6 +2,7 @@ package com.trilink.game.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -92,12 +93,33 @@ private val FallbackDarkScheme = darkColorScheme(
     outlineVariant = Color(0xFF444750),
 )
 
+/** 解析 hex 字符串 (#RRGGBB 或 RRGGBB) 为 Color，失败返回 null */
+fun parseHex(hex: String): Color? {
+    val s = hex.trim().removePrefix("#")
+    if (s.length != 6) return null
+    return try {
+        Color(("FF$s").toLong(16))
+    } catch (_: Exception) {
+        null
+    }
+}
+
+/** 根据 seed hex 生成自定义配色方案 */
+fun seedColorScheme(seedHex: String, dark: Boolean): ColorScheme? {
+    val seed = parseHex(seedHex) ?: return null
+    return if (dark) darkColorScheme(primary = seed)
+    else lightColorScheme(primary = seed)
+}
+
 @Composable
 fun TrilinkTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
     dynamicColor: Boolean = true,
     xColorIndex: Int = 0,
     oColorIndex: Int = 0,
+    customXColorHex: String = "",
+    customOColorHex: String = "",
+    customThemeSeedHex: String = "",
     language: Language = Language.ZH,
     content: @Composable () -> Unit,
 ) {
@@ -109,7 +131,10 @@ fun TrilinkTheme(
         ThemeMode.SYSTEM -> systemDark
     }
 
+    // 配色方案：自定义种子 > 动态色 > 回退
     val colorScheme = when {
+        customThemeSeedHex.isNotBlank() -> seedColorScheme(customThemeSeedHex, darkTheme)
+            ?: if (darkTheme) FallbackDarkScheme else FallbackLightScheme
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
@@ -118,19 +143,24 @@ fun TrilinkTheme(
         else -> FallbackLightScheme
     }
 
-    val xPreset = X_COLOR_PRESETS.getOrElse(xColorIndex) { X_COLOR_PRESETS[0] }
-    val oPreset = O_COLOR_PRESETS.getOrElse(oColorIndex) { O_COLOR_PRESETS[0] }
+    // X 棋子颜色：index == -1 用自定义 hex
+    val xPieceColor = if (xColorIndex < 0) parseHex(customXColorHex) else null
+    val oPieceColor = if (oColorIndex < 0) parseHex(customOColorHex) else null
 
     val pieceColors = if (darkTheme) {
         PieceColors(
-            xPiece = xPreset.darkColor, oPiece = oPreset.darkColor,
-            xBackground = xPreset.darkBg, oBackground = oPreset.darkBg,
+            xPiece = xPieceColor ?: X_COLOR_PRESETS.getOrElse(xColorIndex) { X_COLOR_PRESETS[0] }.darkColor,
+            oPiece = oPieceColor ?: O_COLOR_PRESETS.getOrElse(oColorIndex) { O_COLOR_PRESETS[0] }.darkColor,
+            xBackground = (xPieceColor ?: Color.Unspecified).let { if (it != Color.Unspecified) it.copy(alpha = 0.15f) else PieceXDark },
+            oBackground = (oPieceColor ?: Color.Unspecified).let { if (it != Color.Unspecified) it.copy(alpha = 0.15f) else PieceODark },
             dotColor = Color(0xFF6B7280),
         )
     } else {
         PieceColors(
-            xPiece = xPreset.lightColor, oPiece = oPreset.lightColor,
-            xBackground = xPreset.lightBg, oBackground = oPreset.lightBg,
+            xPiece = xPieceColor ?: X_COLOR_PRESETS.getOrElse(xColorIndex) { X_COLOR_PRESETS[0] }.lightColor,
+            oPiece = oPieceColor ?: O_COLOR_PRESETS.getOrElse(oColorIndex) { O_COLOR_PRESETS[0] }.lightColor,
+            xBackground = (xPieceColor ?: Color.Unspecified).let { if (it != Color.Unspecified) it.copy(alpha = 0.12f) else PieceXLight },
+            oBackground = (oPieceColor ?: Color.Unspecified).let { if (it != Color.Unspecified) it.copy(alpha = 0.12f) else PieceOLight },
             dotColor = DotGray,
         )
     }

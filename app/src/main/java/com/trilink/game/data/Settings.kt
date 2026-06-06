@@ -43,7 +43,10 @@ data class GameSettings(
     val aiThreads: Int = 0,
     val xColorIndex: Int = 0,
     val oColorIndex: Int = 0,
+    val customXColorHex: String = "",
+    val customOColorHex: String = "",
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val dynamicColor: Boolean = true,
+    val customThemeSeedHex: String = "",
     val language: Language = Language.ZH,
 )

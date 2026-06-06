@@ -18,44 +18,38 @@ class SettingsRepository(context: Context) {
             aiThreads = prefs.getInt("ai_threads", 0),
             xColorIndex = prefs.getInt("x_color_index", 0),
             oColorIndex = prefs.getInt("o_color_index", 0),
+            customXColorHex = prefs.getString("custom_x_color", "") ?: "",
+            customOColorHex = prefs.getString("custom_o_color", "") ?: "",
             themeMode = ThemeMode.valueOf(prefs.getString("theme_mode", "SYSTEM") ?: "SYSTEM"),
             dynamicColor = prefs.getBoolean("dynamic_color", true),
+            customThemeSeedHex = prefs.getString("custom_theme_seed", "") ?: "",
             language = Language.valueOf(prefs.getString("language", "ZH") ?: "ZH"),
         )
     }
 
-    fun updateAiTimeLimit(ms: Int) {
-        prefs.edit().putInt("ai_time_limit_ms", ms).apply()
-        _settings.value = _settings.value.copy(aiTimeLimitMs = ms)
+    fun updateAiTimeLimit(ms: Int) { save("ai_time_limit_ms", ms) { copy(aiTimeLimitMs = ms) } }
+    fun updateAiThreads(threads: Int) { save("ai_threads", threads) { copy(aiThreads = threads) } }
+    fun updateXColor(index: Int) { save("x_color_index", index) { copy(xColorIndex = index) } }
+    fun updateOColor(index: Int) { save("o_color_index", index) { copy(oColorIndex = index) } }
+    fun updateCustomXColor(hex: String) { saveStr("custom_x_color", hex) { copy(customXColorHex = hex) } }
+    fun updateCustomOColor(hex: String) { saveStr("custom_o_color", hex) { copy(customOColorHex = hex) } }
+    fun updateThemeMode(mode: ThemeMode) { saveStr("theme_mode", mode.name) { copy(themeMode = mode) } }
+    fun updateDynamicColor(enabled: Boolean) { save("dynamic_color", enabled) { copy(dynamicColor = enabled) } }
+    fun updateCustomThemeSeed(hex: String) { saveStr("custom_theme_seed", hex) { copy(customThemeSeedHex = hex) } }
+    fun updateLanguage(lang: Language) { saveStr("language", lang.name) { copy(language = lang) } }
+
+    private inline fun save(key: String, value: Int, crossinline copy: GameSettings.() -> GameSettings) {
+        prefs.edit().putInt(key, value).apply()
+        _settings.value = _settings.value.copy()
     }
 
-    fun updateAiThreads(threads: Int) {
-        prefs.edit().putInt("ai_threads", threads).apply()
-        _settings.value = _settings.value.copy(aiThreads = threads)
+    private inline fun save(key: String, value: Boolean, crossinline copy: GameSettings.() -> GameSettings) {
+        prefs.edit().putBoolean(key, value).apply()
+        _settings.value = _settings.value.copy()
     }
 
-    fun updateXColor(index: Int) {
-        prefs.edit().putInt("x_color_index", index).apply()
-        _settings.value = _settings.value.copy(xColorIndex = index)
-    }
-
-    fun updateOColor(index: Int) {
-        prefs.edit().putInt("o_color_index", index).apply()
-        _settings.value = _settings.value.copy(oColorIndex = index)
-    }
-
-    fun updateThemeMode(mode: ThemeMode) {
-        prefs.edit().putString("theme_mode", mode.name).apply()
-        _settings.value = _settings.value.copy(themeMode = mode)
-    }
-
-    fun updateDynamicColor(enabled: Boolean) {
-        prefs.edit().putBoolean("dynamic_color", enabled).apply()
-        _settings.value = _settings.value.copy(dynamicColor = enabled)
-    }
-
-    fun updateLanguage(lang: Language) {
-        prefs.edit().putString("language", lang.name).apply()
-        _settings.value = _settings.value.copy(language = lang)
+    private inline fun saveStr(key: String, value: String, crossinline copy: GameSettings.() -> GameSettings) {
+        prefs.edit().putString(key, value).apply()
+        _settings.value = _settings.value.copy()
     }
 }
