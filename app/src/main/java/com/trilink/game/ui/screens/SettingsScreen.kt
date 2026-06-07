@@ -297,7 +297,7 @@ fun SettingsScreen(
             ElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     AboutRow(s.aboutApp, s.appTitle)
-                    AboutRow(s.aboutVersion, "v1.2")
+                    AboutRow(s.aboutVersion, "v2.0")
                     AboutRow(s.aboutLicense, "MIT")
                     AboutRow(s.aboutPlatform, "Android 8.0+")
                     AboutRow(s.aboutTech, "Kotlin · Compose · Material 3")

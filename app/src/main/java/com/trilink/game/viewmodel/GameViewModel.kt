@@ -19,6 +19,7 @@ import com.trilink.game.engine.cloneBoard
 import com.trilink.game.engine.GRID
 import com.trilink.game.engine.BOARD_SIZE
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -88,23 +89,12 @@ class GameViewModel(
             )
         } else {
             // AI 先手
-            if (aiMode == AIMode.WEIGHT) {
-                val pos = findBestMoveWeight(board, aiPiece)
-                val b = cloneBoard(board)
-                b[pos] = aiPiece
-                _phase.value = GamePhase.Playing(
-                    board = b, playerPiece = playerPiece,
-                    aiPiece = aiPiece, isPlayerFirst = false,
-                    message = s.newGameAiFirst(playerPiece), aiThinking = false,
-                )
-            } else {
-                _phase.value = GamePhase.Playing(
-                    board = board, playerPiece = playerPiece,
-                    aiPiece = aiPiece, isPlayerFirst = false,
-                    message = s.aiThinking, aiThinking = true,
-                )
-                runAiMove(board, aiPiece, playerPiece, isPlayerFirst = false)
-            }
+            _phase.value = GamePhase.Playing(
+                board = board, playerPiece = playerPiece,
+                aiPiece = aiPiece, isPlayerFirst = false,
+                message = s.aiThinking, aiThinking = true,
+            )
+            runAiMove(board, aiPiece, playerPiece, isPlayerFirst = false)
         }
     }
 
@@ -146,19 +136,13 @@ class GameViewModel(
             return
         }
 
-        // 触发 AI
-        if (aiMode == AIMode.WEIGHT) {
-            // 权重法瞬间完成，直接落子
-            val pos = findBestMoveWeight(newBoard, current.aiPiece)
-            applyAiMove(newBoard, pos, current.aiPiece, current.playerPiece, current.isPlayerFirst)
-        } else {
-            _phase.value = GamePhase.Playing(
-                board = newBoard, playerPiece = current.playerPiece,
-                aiPiece = current.aiPiece, isPlayerFirst = current.isPlayerFirst,
-                message = s.aiThinking, aiThinking = true,
-            )
-            runAiMove(newBoard, current.aiPiece, current.playerPiece, current.isPlayerFirst)
-        }
+        // 触发 AI — 统一走协程 + 精确定时
+        _phase.value = GamePhase.Playing(
+            board = newBoard, playerPiece = current.playerPiece,
+            aiPiece = current.aiPiece, isPlayerFirst = current.isPlayerFirst,
+            message = s.aiThinking, aiThinking = true,
+        )
+        runAiMove(newBoard, current.aiPiece, current.playerPiece, current.isPlayerFirst)
     }
 
     /** 返回选棋界面 */
@@ -168,7 +152,7 @@ class GameViewModel(
 
     // ─── 内部方法 ────────────────────────────────────────────────────────────────
 
-    /** 在协程中执行 AI 搜索 */
+    /** 在协程中执行 AI 搜索，精确控制落子时间为设置值 */
     private fun runAiMove(
         board: CharArray,
         aiPiece: Char,
@@ -176,10 +160,20 @@ class GameViewModel(
         isPlayerFirst: Boolean,
     ) {
         viewModelScope.launch(Dispatchers.Default) {
-            val (bestPos, _) = iterativeDeepening(
-                board = board, ai = aiPiece, player = playerPiece,
-                timeLimitMs = aiTimeLimitMs, numThreads = aiThreads,
-            )
+            val startNanos = System.nanoTime()
+
+            val bestPos = when (aiMode) {
+                AIMode.WEIGHT -> findBestMoveWeight(board, aiPiece)
+                AIMode.ALPHA_BETA -> iterativeDeepening(
+                    board = board, ai = aiPiece, player = playerPiece,
+                    timeLimitMs = aiTimeLimitMs, numThreads = aiThreads,
+                ).first
+            }
+
+            // 精确等待到时限
+            val elapsed = (System.nanoTime() - startNanos) / 1_000_000
+            val remaining = aiTimeLimitMs - elapsed
+            if (remaining > 0) delay(remaining)
 
             if (bestPos < 0 || bestPos >= BOARD_SIZE) {
                 launch(Dispatchers.Main) {
@@ -191,31 +185,23 @@ class GameViewModel(
             }
 
             launch(Dispatchers.Main) {
-                applyAiMove(board, bestPos, aiPiece, playerPiece, isPlayerFirst)
+                val newBoard = cloneBoard(board)
+                newBoard[bestPos] = aiPiece
+                val aiRow = bestPos / GRID; val aiCol = bestPos % GRID
+                Log.i(TAG, "AI 落子 ($aiRow,$aiCol)")
+                Log.d(TAG, "当前棋盘:\n${boardToLog(newBoard)}")
+
+                if (isGameOver(newBoard)) {
+                    endGame(newBoard, playerPiece, aiPiece, isPlayerFirst)
+                } else {
+                    val current = _phase.value as? GamePhase.Playing ?: return@launch
+                    _phase.value = current.copy(
+                        board = newBoard,
+                        message = s.aiMoved(aiRow, aiCol),
+                        aiThinking = false,
+                    )
+                }
             }
-        }
-    }
-
-    /** 应用 AI 落子到棋盘，检查终局 */
-    private fun applyAiMove(
-        board: CharArray, pos: Int, aiPiece: Char,
-        playerPiece: Char, isPlayerFirst: Boolean,
-    ) {
-        val newBoard = cloneBoard(board)
-        newBoard[pos] = aiPiece
-        val aiRow = pos / GRID; val aiCol = pos % GRID
-        Log.i(TAG, "AI 落子 ($aiRow,$aiCol)")
-        Log.d(TAG, "当前棋盘:\n${boardToLog(newBoard)}")
-
-        if (isGameOver(newBoard)) {
-            endGame(newBoard, playerPiece, aiPiece, isPlayerFirst)
-        } else {
-            val current = _phase.value as? GamePhase.Playing ?: return
-            _phase.value = current.copy(
-                board = newBoard,
-                message = s.aiMoved(aiRow, aiCol),
-                aiThinking = false,
-            )
         }
     }
 
