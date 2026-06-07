@@ -19,6 +19,7 @@ import com.trilink.game.engine.cloneBoard
 import com.trilink.game.engine.GRID
 import com.trilink.game.engine.BOARD_SIZE
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -166,7 +167,11 @@ class GameViewModel(
     ) {
         viewModelScope.launch(Dispatchers.Default) {
             val bestPos = when (aiMode) {
-                AIMode.WEIGHT -> findBestMoveWeight(board, aiPiece)
+                AIMode.WEIGHT -> {
+                    val pos = findBestMoveWeight(board, aiPiece)
+                    delay(300) // 最低显示 AI 思考状态
+                    pos
+                }
                 AIMode.ALPHA_BETA -> iterativeDeepening(
                     board = board, ai = aiPiece, player = playerPiece,
                     timeLimitMs = aiTimeLimitMs, numThreads = aiThreads,
