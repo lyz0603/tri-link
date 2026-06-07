@@ -18,6 +18,7 @@ import com.trilink.game.engine.pos
 import com.trilink.game.engine.cloneBoard
 import com.trilink.game.engine.GRID
 import com.trilink.game.engine.BOARD_SIZE
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,6 +69,7 @@ class GameViewModel(
 
     private val _phase = MutableStateFlow<GamePhase>(GamePhase.Setup)
     val phase: StateFlow<GamePhase> = _phase.asStateFlow()
+    private val aiCalculating = AtomicBoolean(false)
 
     // ─── 公开方法 ────────────────────────────────────────────────────────────────
 
@@ -159,6 +161,7 @@ class GameViewModel(
         playerPiece: Char,
         isPlayerFirst: Boolean,
     ) {
+        if (!aiCalculating.compareAndSet(false, true)) return
         viewModelScope.launch(Dispatchers.Default) {
             val startNanos = System.nanoTime()
 
@@ -176,6 +179,7 @@ class GameViewModel(
             if (remaining > 0) delay(remaining)
 
             if (bestPos < 0 || bestPos >= BOARD_SIZE) {
+                aiCalculating.set(false)
                 launch(Dispatchers.Main) {
                     _phase.value = (_phase.value as? GamePhase.Playing)?.copy(
                         message = s.aiCantMove, aiThinking = false,
@@ -185,6 +189,7 @@ class GameViewModel(
             }
 
             launch(Dispatchers.Main) {
+                aiCalculating.set(false)
                 val newBoard = cloneBoard(board)
                 newBoard[bestPos] = aiPiece
                 val aiRow = bestPos / GRID; val aiCol = bestPos % GRID
